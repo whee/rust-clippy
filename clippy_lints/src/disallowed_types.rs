@@ -1,9 +1,7 @@
 use clippy_utils::diagnostics::span_lint_and_then;
 
 use rustc_data_structures::fx::FxHashMap;
-use rustc_hir::{
-    def::Res, def_id::DefId, Item, ItemKind, PolyTraitRef, PrimTy, Ty, TyKind, UseKind,
-};
+use rustc_hir::{def::Res, def_id::DefId, Item, ItemKind, PolyTraitRef, PrimTy, Ty, TyKind, UseKind};
 use rustc_lint::{LateContext, LateLintPass};
 use rustc_session::{declare_tool_lint, impl_lint_pass};
 use rustc_span::Span;

@@ -8,7 +8,7 @@ use clippy_utils::{higher, is_lang_ctor, is_trait_method};
 use if_chain::if_chain;
 use rustc_ast::ast::LitKind;
 use rustc_errors::Applicability;
-use rustc_hir::LangItem::{self, OptionSome, OptionNone, PollPending, PollReady, ResultOk, ResultErr};
+use rustc_hir::LangItem::{self, OptionNone, OptionSome, PollPending, PollReady, ResultErr, ResultOk};
 use rustc_hir::{Arm, Expr, ExprKind, Node, Pat, PatKind, QPath, UnOp};
 use rustc_lint::LateContext;
 use rustc_middle::ty::{self, subst::GenericArgKind, DefIdTree, Ty};
@@ -213,7 +213,6 @@ pub(super) fn check_match<'tcx>(cx: &LateContext<'tcx>, expr: &'tcx Expr<'_>, op
                 if patterns.len() == 1 =>
             {
                 if let PatKind::Wild = patterns[0].kind {
-
                     find_good_method_for_match(
                         cx,
                         arms,
@@ -269,8 +268,8 @@ pub(super) fn check_match<'tcx>(cx: &LateContext<'tcx>, expr: &'tcx Expr<'_>, op
 
 #[derive(Clone, Copy)]
 enum Item {
-  Lang(LangItem),
-  Diag(Symbol, Symbol),
+    Lang(LangItem),
+    Diag(Symbol, Symbol),
 }
 
 fn is_pat_variant(cx: &LateContext<'_>, pat: &Pat<'_>, path: &QPath<'_>, expected_item: Item) -> bool {
@@ -285,15 +284,16 @@ fn is_pat_variant(cx: &LateContext<'_>, pat: &Pat<'_>, path: &QPath<'_>, expecte
             let ty = cx.typeck_results().pat_ty(pat);
 
             if is_type_diagnostic_item(cx, ty, expected_ty) {
-                let variant = ty.ty_adt_def()
+                let variant = ty
+                    .ty_adt_def()
                     .expect("struct pattern type is not an ADT")
                     .variant_of_res(cx.qpath_res(path, pat.hir_id));
 
-                return variant.name == expected_variant
+                return variant.name == expected_variant;
             }
 
             false
-        }
+        },
     }
 }
 
@@ -308,20 +308,16 @@ fn find_good_method_for_match<'a>(
     should_be_left: &'a str,
     should_be_right: &'a str,
 ) -> Option<&'a str> {
-    let pat_left = arms[0].pat;
-    let pat_right = arms[1].pat;
+    let pat_first = arms[0].pat;
+    let pat_second = arms[1].pat;
 
-    let body_node_pair = if (
-        is_pat_variant(cx, pat_left, path_left, expected_item_left)
-    ) && (
-        is_pat_variant(cx, pat_right, path_right, expected_item_right)
-    ) {
+    let body_node_pair = if (is_pat_variant(cx, pat_first, path_left, expected_item_left))
+        && (is_pat_variant(cx, pat_second, path_right, expected_item_right))
+    {
         (&arms[0].body.kind, &arms[1].body.kind)
-    } else if (
-        is_pat_variant(cx, pat_left, path_left, expected_item_right)
-    ) && (
-        is_pat_variant(cx, pat_right, path_right, expected_item_left)
-    ) {
+    } else if (is_pat_variant(cx, pat_first, path_left, expected_item_right))
+        && (is_pat_variant(cx, pat_second, path_right, expected_item_left))
+    {
         (&arms[1].body.kind, &arms[0].body.kind)
     } else {
         return None;
