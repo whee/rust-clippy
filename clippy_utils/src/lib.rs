@@ -1,7 +1,6 @@
 #![feature(array_chunks)]
 #![feature(box_patterns)]
 #![feature(control_flow_enum)]
-#![feature(let_else)]
 #![feature(let_chains)]
 #![feature(lint_reasons)]
 #![feature(once_cell)]
@@ -1121,7 +1120,7 @@ pub struct ContainsName {
 }
 
 impl<'tcx> Visitor<'tcx> for ContainsName {
-    fn visit_name(&mut self, _: Span, name: Symbol) {
+    fn visit_name(&mut self, name: Symbol) {
         if self.name == name {
             self.result = true;
         }
@@ -1552,7 +1551,8 @@ pub fn iter_input_pats<'tcx>(decl: &FnDecl<'_>, body: &'tcx Body<'_>) -> impl It
 pub fn is_try<'tcx>(cx: &LateContext<'_>, expr: &'tcx Expr<'tcx>) -> Option<&'tcx Expr<'tcx>> {
     fn is_ok(cx: &LateContext<'_>, arm: &Arm<'_>) -> bool {
         if_chain! {
-            if let PatKind::TupleStruct(ref path, pat, None) = arm.pat.kind;
+            if let PatKind::TupleStruct(ref path, pat, ddpos) = arm.pat.kind;
+            if ddpos.as_opt_usize().is_none();
             if is_lang_ctor(cx, path, ResultOk);
             if let PatKind::Binding(_, hir_id, _, None) = pat[0].kind;
             if path_to_local_id(arm.body, hir_id);
